@@ -1,0 +1,78 @@
+name: Deploy Flask Website
+
+on:
+  push:
+    branches: [ main ]  # Adjust if your default branch is different (e.g., master)
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flask markdown gunicorn  # Add any other dependencies you need
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Build static site
+      run: |
+        # Create a script to convert your Flask app to static files
+        cat > freeze.py << 'EOF'
+        import os
+        import sys
+        from pathlib import Path
+        
+        # Import your Flask app and functions
+        from main import app, load_markdown
+        
+        # Create output directory
+        output_dir = Path("_site")
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Get all markdown files
+        content_dir = Path("content")
+        md_files = list(content_dir.glob("*.md"))
+        
+        # Process home page
+        with open(output_dir / "index.html", "w") as f:
+            with app.test_request_context("/"):
+                f.write(app.view_functions["home"]())
+        
+        # Process other pages
+        for md_file in md_files:
+            page_name = md_file.stem
+            if page_name == "home":
+                continue  # Already handled
+                
+            page_dir = output_dir / page_name
+            os.makedirs(page_dir, exist_ok=True)
+            
+            with open(page_dir / "index.html", "w") as f:
+                with app.test_request_context(f"/{page_name}"):
+                    f.write(app.view_functions["page"](page_name))
+        
+        # Copy static files
+        static_dir = Path("static")
+        if static_dir.exists():
+            os.system(f"cp -r {static_dir}/* {output_dir}/")
+        EOF
+        
+        python freeze.py
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_site
+        force_orphan: true
