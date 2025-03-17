@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, abort
 import markdown
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/repository-name/static')
 
 def load_markdown(filename):
     """Load a Markdown file from the content directory and convert it to HTML."""

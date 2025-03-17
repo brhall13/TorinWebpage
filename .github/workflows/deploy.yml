@@ -32,6 +32,9 @@ jobs:
         import os
         import sys
         from pathlib import Path
+
+        # Define your repository name
+        repo_name = "TorinWebpage"
         
         # Import your Flask app and functions
         from main import app, load_markdown
