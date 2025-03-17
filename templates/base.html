@@ -1,17 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My Pathfinder World</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <!-- Google Font for a medieval look -->
-  <link href="https://fonts.googleapis.com/css?family=Cinzel:400,700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>My Pathfinder World</title>
+    <!-- For development with Flask -->
+    {% if config.ENV == 'development' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% else %}
+    <!-- For production on GitHub Pages -->
+    <link rel="stylesheet" href="./static/style.css">
+    {% endif %}
+    <!-- Google Font for a medieval look -->
+    <link href="https://fonts.googleapis.com/css?family=Cinzel:400,700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="container">
-    <div class="scroll">
-      {{ content|safe }}
+    <div class="container">
+        <div class="scroll">
+            {{ content|safe }}
+        </div>
     </div>
-  </div>
 </body>
 </html>
